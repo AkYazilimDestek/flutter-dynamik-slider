@@ -1,26 +1,70 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'views/HomePage.dart';
-void main() => runApp(MyApp());
+import 'package:http/http.dart' as http;
+import 'package:carousel_pro/carousel_pro.dart';
 
-class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+void main() => runApp(App());
+class App extends StatelessWidget {
+  const App({Key? key}) : super(key: key);
 
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      theme:ThemeData(
-        primarySwatch: Colors.brown,
-      ),
-      getPages: [
-        GetPage(name: "/home", page: () => HomePage()),
-      ],
-      home : HomePage()
+    return MaterialApp(
+      home : _Vucut(),
     );
   }
 }
+
+class _Vucut extends StatefulWidget {
+  const _Vucut({Key? key}) : super(key: key);
+
+  @override
+  State<_Vucut> createState() => _VucutState();
+}
+
+class _VucutState extends State<_Vucut> {
+  
+  late List imageList;
+  late bool loading = true;
+  
+  fetchAllImage() async {
+    final response = await http.get(Uri.parse("https://raw.githubusercontent.com/AkYazilimDestek/dynamik_slider-flutter/b1b8de6f9755f855ea87bfac47ea3bbf920a6388/slider.json"));
+    if (response.statusCode == 200) {
+      setState(() {
+        imageList = jsonDecode(response.body);        
+        loading = false;
+      });
+    }
+  }
+  
+  @override
+  void initState() {
+    super.initState();
+    fetchAllImage();
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("FLUTTER SLIDER"),
+      ),
+      body: Center(
+        child: Column(
+          children: [
+            SizedBox(
+              width : double.infinity,
+              height: 200,
+              child : loading ? CircularProgressIndicator() : Carousel(
+                images: imageList.map((element){
+                  return Image.network(element["image"]);
+                }).toList(),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
